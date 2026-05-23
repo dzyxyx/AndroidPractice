@@ -1,26 +1,31 @@
 package com.example.androidpractice.ui.movielist
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.Image
-
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -30,30 +35,64 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.androidpractice.R
-import com.example.androidpractice.data.model.Movie
-
+import coil.compose.AsyncImage
+import com.example.androidpractice.domain.model.Movie
+import com.example.androidpractice.ui.UiState
 
 @Composable
 fun MovieListScreen(
     onMovieClick: (Int) -> Unit,
     viewModel: MovieListViewModel = viewModel()
 ) {
-    val movies by viewModel.movies.collectAsState()
+    val state by viewModel.state.collectAsState()
+    val query by viewModel.searchQuery.collectAsState()
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = WindowInsets.statusBars.asPaddingValues()
-    ) {
-        items(movies) { movie ->
-            MovieCard(
-                movie = movie,
-                onClick = { onMovieClick(movie.id) }
-            )
+    Column(modifier = Modifier.fillMaxSize()) {
+
+        OutlinedTextField(
+            value = query,
+            onValueChange = { viewModel.searchQuery.value = it },
+            placeholder = { Text("Поиск фильмов...") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(WindowInsets.statusBars.asPaddingValues())
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+
+        when (val s = state) {
+            is UiState.Loading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            is UiState.Error -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = s.message, color = Color.Red)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(onClick = { viewModel.loadMovies() }) {
+                            Text("Повторить")
+                        }
+                    }
+                }
+            }
+
+            is UiState.Success -> {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(s.data) { movie ->
+                        MovieCard(
+                            movie = movie,
+                            onClick = { onMovieClick(movie.id) }
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -74,8 +113,8 @@ fun MovieCard(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.cinema_placeholder),
+            AsyncImage(
+                model = movie.posterUrl,
                 contentDescription = "Постер",
                 modifier = Modifier
                     .size(width = 80.dp, height = 120.dp)
@@ -93,18 +132,18 @@ fun MovieCard(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${movie.year} - ${movie.genre}",
+                    text = "${movie.year ?: "—"} · ${movie.genres}",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Rating: ${movie.rating}",
+                    text = "⭐ ${movie.rating ?: "—"}",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = movie.director,
+                    text = movie.director ?: "",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )

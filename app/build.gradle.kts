@@ -1,3 +1,10 @@
+import java.util.Properties
+
+
+val localProperties = Properties().apply {
+    load(rootProject.file("local.properties").inputStream())
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -16,7 +23,18 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        buildConfigField(
+            "String",
+            "POISKKINO_API_KEY",
+            "\"${localProperties["POISKKINO_API_KEY"]}\""
+        )
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildFeatures {
+        compose = true
+        buildConfig = true
     }
 
     buildTypes {
@@ -51,6 +69,11 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.constraintlayout.compose)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp.logging.interceptor)
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.coil.compose)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
