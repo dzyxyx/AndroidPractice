@@ -12,6 +12,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -40,6 +42,7 @@ fun MovieDetailScreen(
     viewModel: MovieDetailViewModel = viewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val isInFavorites by viewModel.isInFavorites.collectAsState()
 
     when (val s = state) {
         is UiState.Loading -> {
@@ -60,18 +63,28 @@ fun MovieDetailScreen(
             }
         }
 
-        is UiState.Success -> MovieDetailContent(movie = s.data, onBack = onBack)
+        is UiState.Success -> MovieDetailContent(
+            movie = s.data,
+            isInFavorites = isInFavorites,
+            onBack = onBack,
+            onToggleFavorite = { viewModel.toggleFavorite() }
+        )
     }
 }
 
 @Composable
-private fun MovieDetailContent(movie: Movie, onBack: () -> Unit) {
+private fun MovieDetailContent(
+    movie: Movie,
+    isInFavorites: Boolean,
+    onBack: () -> Unit,
+    onToggleFavorite: () -> Unit
+) {
     ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        val (poster, backButton, title, year, genre, director, ratingLabel, description) = createRefs()
+        val (poster, backButton, favoriteButton, title, year, genre, director, ratingLabel, description) = createRefs()
 
         // Постер
         AsyncImage(
@@ -88,7 +101,7 @@ private fun MovieDetailContent(movie: Movie, onBack: () -> Unit) {
             contentScale = ContentScale.Crop
         )
 
-        // Кнопка назад (поверх постера)
+        // Кнопка назад
         IconButton(
             onClick = onBack,
             modifier = Modifier
@@ -102,6 +115,23 @@ private fun MovieDetailContent(movie: Movie, onBack: () -> Unit) {
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Назад",
                 tint = Color.White
+            )
+        }
+
+        // Кнопка избранного
+        IconButton(
+            onClick = onToggleFavorite,
+            modifier = Modifier
+                .statusBarsPadding()
+                .constrainAs(favoriteButton) {
+                    top.linkTo(parent.top, margin = 16.dp)
+                    end.linkTo(parent.end, margin = 8.dp)
+                }
+        ) {
+            Icon(
+                imageVector = if (isInFavorites) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                contentDescription = if (isInFavorites) "Удалить из избранного" else "Добавить в избранное",
+                tint = if (isInFavorites) Color.Red else Color.White
             )
         }
 

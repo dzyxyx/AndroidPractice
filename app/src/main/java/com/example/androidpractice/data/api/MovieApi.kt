@@ -13,6 +13,9 @@ interface MovieApi {
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20,
         @Query("type") type: String = "movie",
+        @Query("genres.name") genre: String? = null,
+        @Query("rating.kp") minRating: String? = null,
+        @Query("year") minYear: String? = null,
     ): MovieListResponse
 
     @GET("v1.4/movie/{id}")
