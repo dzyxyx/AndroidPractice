@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -22,6 +23,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.compose.rememberNavController
 import com.example.androidpractice.di.FilterBadgeCache
 import com.example.androidpractice.navigation.AppNavGraph
+import com.example.androidpractice.navigation.ProfileNavGraph
 import com.example.androidpractice.ui.favorites.FavoritesScreen
 import com.example.androidpractice.ui.filter.FilterScreen
 import com.example.androidpractice.ui.theme.AndroidPracticeTheme
@@ -49,12 +51,14 @@ enum class AppDestinations(
     HOME("Главная", Icons.Default.Home),
     FAVORITES("Избранное", Icons.Default.Favorite),
     FILTER("Фильтры", Icons.Default.FilterList),
+    PROFILE("Профиль", Icons.Default.Person),
 }
 
 @Composable
 fun AppContent(hasActiveFilters: Boolean = false) {
     val currentDestination = rememberSaveable { mutableStateOf(AppDestinations.HOME) }
-    val navController = rememberNavController()
+    val homeNavController = rememberNavController()
+    val profileNavController = rememberNavController()
 
     NavigationSuiteScaffold(
         navigationSuiteItems = {
@@ -77,16 +81,17 @@ fun AppContent(hasActiveFilters: Boolean = false) {
         }
     ) {
         when (currentDestination.value) {
-            AppDestinations.HOME -> AppNavGraph(navController = navController)
+            AppDestinations.HOME -> AppNavGraph(navController = homeNavController)
             AppDestinations.FAVORITES -> FavoritesScreen(
                 onMovieClick = { movieId ->
                     currentDestination.value = AppDestinations.HOME
-                    navController.navigate("movie_detail/$movieId")
+                    homeNavController.navigate("movie_detail/$movieId")
                 }
             )
             AppDestinations.FILTER -> FilterScreen(
                 onApply = { currentDestination.value = AppDestinations.HOME }
             )
+            AppDestinations.PROFILE -> ProfileNavGraph(navController = profileNavController)
         }
     }
 }
