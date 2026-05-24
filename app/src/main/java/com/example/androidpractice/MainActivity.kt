@@ -18,7 +18,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.compose.rememberNavController
 import com.example.androidpractice.di.FilterBadgeCache
@@ -54,7 +53,7 @@ enum class AppDestinations(
 
 @Composable
 fun AppContent(hasActiveFilters: Boolean = false) {
-    var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
+    val currentDestination = rememberSaveable { mutableStateOf(AppDestinations.HOME) }
     val navController = rememberNavController()
 
     NavigationSuiteScaffold(
@@ -71,22 +70,22 @@ fun AppContent(hasActiveFilters: Boolean = false) {
                         }
                     },
                     label = { Text(destination.label) },
-                    selected = destination == currentDestination,
-                    onClick = { currentDestination = destination }
+                    selected = destination == currentDestination.value,
+                    onClick = { currentDestination.value = destination }
                 )
             }
         }
     ) {
-        when (currentDestination) {
+        when (currentDestination.value) {
             AppDestinations.HOME -> AppNavGraph(navController = navController)
             AppDestinations.FAVORITES -> FavoritesScreen(
                 onMovieClick = { movieId ->
-                    currentDestination = AppDestinations.HOME
+                    currentDestination.value = AppDestinations.HOME
                     navController.navigate("movie_detail/$movieId")
                 }
             )
             AppDestinations.FILTER -> FilterScreen(
-                onApply = { currentDestination = AppDestinations.HOME }
+                onApply = { currentDestination.value = AppDestinations.HOME }
             )
         }
     }
